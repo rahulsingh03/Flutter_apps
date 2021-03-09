@@ -18,6 +18,7 @@ void main() {
         ),
         body: MyApp(),
         ),
+      debugShowCheckedModeBanner: false,
     ),
   );
 }
@@ -75,4 +76,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
