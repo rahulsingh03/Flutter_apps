@@ -1,15 +1,20 @@
 import 'dart:math';
+import 'dart:io';
 
-class Num{
-  int num = 12;
+class Dog{
+  String name;
+  int age;
+
+  void showOutput(){
+    print(name);
+    print(age);
+  }
 }
 
+void main(){
+  Dog person1 = Dog();
+  person1.name = 'Mehul';
+  person1.age = 12;
+  person1.showOutput();
 
-main(){
-  int n = 12;
-  print(square(n));
-}
-
-dynamic square(n){
-  return (pow(n,2));
 }
