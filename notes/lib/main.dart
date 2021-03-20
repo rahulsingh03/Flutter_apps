@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'dart:math';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -21,27 +20,49 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 class _MyHomePageState extends State<MyHomePage> {
-  
-  List<String> _todoItems = [];
+
+  List<String> todoItems = [];
   TextEditingController content = TextEditingController();
-  bool isPressed = false;
+  SharedPreferences sharedPreferences;
+
   @override
   void initState(){
+    initSharedPreferences();
     content = TextEditingController();
     super.initState();
   }
+
+  Future initSharedPreferences() async{
+    sharedPreferences = await SharedPreferences.getInstance();
+    loadData();
+  }
+  
   @override
   void dispose() {
     content.dispose();
     super.dispose();
   }
-  void _addTodoItem(String task) {
-        if(task.length > 0) {
-          setState(() => _todoItems.add(task));
-        content.text='';
-          }
+  void saveData(String task){
+    if (todoItems.length > 0){
+      sharedPreferences.setStringList('list',todoItems);
+    }
   }
- 
+
+  void loadData(){
+      List<String> todoItem = sharedPreferences.getStringList('list');
+      if (todoItem != null){
+      setState((){todoItems = todoItem;});
+  }
+  }
+
+  void _addTodoItem(String task) {
+    if (task.length > 0){
+          setState((){todoItems.add(task);});
+          saveData(task);
+          content.text='';
+  }
+  }
+
   Widget pageRoute(Color colors){
     return Scaffold(
         backgroundColor: colors,
@@ -69,10 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 
                 TextField(
                   autofocus: true,
-                  // onSubmitted: (val) {
-                  //   _addTodoItem(val);
-                  //   Navigator.pop(context);
-                  // },
                   maxLines:20,
                   controller:content,
                   decoration: InputDecoration(
@@ -86,24 +103,23 @@ class _MyHomePageState extends State<MyHomePage> {
             ), 
       );
     }
-
-  Widget topCards({double gap=10.0, Color colors=Colors.grey, String text='So Silent',required Size size, required List list,required int index}){
-        return GestureDetector(
-              onTap: (){
-              Navigator.push(context,
-              MaterialPageRoute(builder: (context) => MainCard(texts:text,colors:colors,todoItems:list,index:index)),
-              );
-              },
-              child: Container(
+  Widget topCards({Size size,String text}){
+        // return GestureDetector(
+        //       onTap: (){
+        //       Navigator.push(context,
+        //       MaterialPageRoute(builder: (context) => MainCard(texts:text,colors:colors,index:index)),
+        //       );
+        //       },
+        return  Container(
                           width:150,
-                          margin: EdgeInsets.only(right:gap,left:gap),
+                          margin: EdgeInsets.only(right:10,left:10),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
-                            color: colors,
+                            color: Colors.blueAccent,
                           ),
                           height: size.height/4,
                           child: Padding(
-                            padding: EdgeInsets.all(gap),
+                            padding: EdgeInsets.all(10),
                             child: Text(text,
                               style: TextStyle(
                               fontSize:16,
@@ -111,9 +127,9 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ),
                           ),
-                        ),
-        );
-    }
+                  );
+  }
+  
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
@@ -150,7 +166,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         drawer: AppDrawer(),
         body: SafeArea(
-          child: Column(
+          child: todoItems.isEmpty?
+                Center(child: Text('Such Empty'),):
+                Column(
               children:<Widget>[
               SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
@@ -160,15 +178,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
+                    // if (todoItems!=null) for (String i in todoItems) topCards(size:size,text:i)
+                      if (todoItems.length > 0) for (String text in todoItems.reversed.toList()) topCards(text:text,size:size)
                       
-                      for (String i in _todoItems.reversed.toList())
-                        topCards(text:i,size:size,list:_todoItems,index:_todoItems.indexOf(i),colors:Colors.purple.shade700),
                       ],
                     ),
                   ),
                 ),
               ],
           ),
+             
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: (){
@@ -189,7 +208,7 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     Widget listtile({String text='Calm Down',IconData icon= Icons.handyman,}){
+    Widget listtile({String text='Calm Down',IconData icon= Icons.handyman,}){
     return ListTile(
           title: Text(text),
           leading: Icon(icon),
@@ -242,7 +261,7 @@ class MainCard extends StatefulWidget {
   final Color colors;
   final List todoItems;
   final int index;
-  MainCard({required this.texts,required this.colors,required this.todoItems,required this.index});
+  MainCard({this.texts,this.colors,this.todoItems,this.index});
 
   @override
   _MainCardState createState() => _MainCardState();
@@ -306,3 +325,4 @@ class _MainCardState extends State<MainCard> {
       );
   }
 }
+
