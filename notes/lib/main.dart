@@ -19,16 +19,19 @@ class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
+
 class _MyHomePageState extends State<MyHomePage> {
 
   List<String> todoItems = [];
   TextEditingController content = TextEditingController();
+  TextEditingController editcontent = TextEditingController();
   SharedPreferences sharedPreferences;
 
   @override
   void initState(){
     initSharedPreferences();
     content = TextEditingController();
+    // editcontent = TextEditingController(text:content.text);
     super.initState();
   }
 
@@ -42,7 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
     content.dispose();
     super.dispose();
   }
-  void saveData(String task){
+  void saveData(){
     if (todoItems.length > 0){
       sharedPreferences.setStringList('list',todoItems);
     }
@@ -58,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _addTodoItem(String task) {
     if (task.length > 0){
           setState((){todoItems.add(task);});
-          saveData(task);
+          saveData();
           content.text='';
   }
   }
@@ -103,19 +106,93 @@ class _MyHomePageState extends State<MyHomePage> {
             ), 
       );
     }
-  Widget topCards({Size size,String text}){
-        // return GestureDetector(
-        //       onTap: (){
-        //       Navigator.push(context,
-        //       MaterialPageRoute(builder: (context) => MainCard(texts:text,colors:colors,index:index)),
-        //       );
-        //       },
-        return  Container(
+  remove(int index){
+    Navigator.pop(context);
+    setState(() {
+      todoItems.removeAt(index);
+    });
+    saveData();
+  }
+  empty(int index){
+    setState(() {
+      todoItems.removeAt(index);
+    });
+    saveData();
+  }
+  edited(int index,String text){
+    if (editcontent.text != text){
+      if (editcontent.text.length == 0){
+        empty(index);
+      }
+      else{
+      todoItems[index] = editcontent.text;
+      saveData();
+      }
+    }
+  }
+
+  Widget editContent({String texts,Color colors,int index}) {
+    editcontent.text = texts;
+    return Scaffold(
+        backgroundColor: colors,
+        appBar:AppBar(
+          elevation: 0,
+            backgroundColor: colors,
+            leading: IconButton(
+                      padding: EdgeInsets.only(right: 14),
+                      icon: Icon(Icons.arrow_back,color:Colors.black,),
+                      onPressed: (){
+                        Navigator.pop(context);
+                      },
+                      ),
+              actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.delete,color:Colors.black),
+                onPressed: (){
+                  remove(index);
+                  }
+                ),
+              IconButton(
+                icon: Icon(Icons.save_rounded,color:Colors.black),
+                onPressed: (){
+                  edited(index,texts);
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+        ),
+        body: SafeArea(
+          child: Container(
+            padding: EdgeInsets.zero,
+            child: Column(
+                children: <Widget>[
+                  TextField(
+                    decoration:InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(16.0),
+                    ),
+                    controller: editcontent,
+                    maxLines: 20,
+                  ),
+              ],
+            ),
+          ),
+            ), 
+      );
+  }
+  Widget topCards({Size size,String text, Color colors,int index}){
+        return GestureDetector(
+              onTap: (){
+              Navigator.push(context,
+              MaterialPageRoute(builder: (context) => editContent(texts:text,colors:colors,index:index)),
+              );
+              },
+              child: Container(
                           width:150,
                           margin: EdgeInsets.only(right:10,left:10),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
-                            color: Colors.blueAccent,
+                            color:  colors,
                           ),
                           height: size.height/4,
                           child: Padding(
@@ -127,7 +204,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ),
                           ),
-                  );
+                  ),
+        );
   }
   
   @override
@@ -179,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                     // if (todoItems!=null) for (String i in todoItems) topCards(size:size,text:i)
-                      if (todoItems.length > 0) for (String text in todoItems.reversed.toList()) topCards(text:text,size:size)
+                      if (todoItems.length > 0) for (String text in todoItems.reversed.toList()) topCards(text:text,size:size,colors:Colors.blueAccent,index:todoItems.indexOf(text))
                       
                       ],
                     ),
@@ -187,7 +265,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
           ),
-             
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: (){
@@ -255,74 +332,39 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-class MainCard extends StatefulWidget {
+// class MainCard extends StatefulWidget {
   
-  final String texts;
-  final Color colors;
-  final List todoItems;
-  final int index;
-  MainCard({this.texts,this.colors,this.todoItems,this.index});
+//   final String texts;
+//   final Color colors;
+//   final List todoItems;
+//   MainCard({this.texts,this.colors,this.todoItems});
 
-  @override
-  _MainCardState createState() => _MainCardState();
-}
+//   @override
+//   _MainCardState createState() => _MainCardState();
+// }
 
-class _MainCardState extends State<MainCard> {
+// class _MainCardState extends State<MainCard> {
 
-  TextEditingController editcontent = TextEditingController();
+//   TextEditingController editcontent = TextEditingController();
 
-  @override
-  void initState(){
-    editcontent = TextEditingController(text:widget.texts);
-    super.initState();
-  }
-  @override
-  void dispose() {
-    editcontent.dispose();
-    super.dispose();
-  }
+//   @override
+//   void initState(){
+//     editcontent = TextEditingController(text:widget.texts);
+//     super.initState();
+//   }
+//   @override
+//   void dispose() {
+//     editcontent.dispose();
+//     super.dispose();
+//   }
 
-  void editContent(){
-      if (widget.texts != editcontent.text){
-        widget.todoItems[widget.index] = editcontent.text;
-      }
-  }
+//   void editContent(){
+//       if (widget.texts != editcontent.text){
+//         widget.todoItems[widget.index] = editcontent.text;
+//       }
+//   }
   
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: widget.colors,
-        body: SafeArea(
-          child: Column(
-              children: <Widget>[
-                ListTile(
-                  leading: IconButton(
-                    icon: Icon(Icons.arrow_back,color:Colors.black),
-                    onPressed: (){
-                      Navigator.pop(context);
-                    },
-                    ),
-                    
-                  trailing: IconButton(
-                    icon:Icon(Icons.turned_in_not_rounded,color:Colors.black),
-                    onPressed: (){
-                      editContent();
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),  
-                TextField(
-                  decoration:InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.all(16.0),
-                  ),
-                  controller: editcontent,
-                  maxLines: 20,
-                ),
-            ],
-          ),
-            ), 
-      );
-  }
-}
+//   @override
+  
+// }
 
